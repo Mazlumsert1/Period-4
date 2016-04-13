@@ -171,5 +171,158 @@ ADVANTAGES:
 ----------------------
 
 7. Explain and demonstrate use of the npm passportjs module:
+Creating the Project
+Once all of the prerequisite software is setup, we can create our Express server:
 
+express LocalAuthApp
+cd LocalAuthApp
+npm install
+Next, install the passport and passport-local Node modules using the following commands.
+
+npm install passport
+npm install passport-local
+Next, start the node server using the following command. To verify that everything is setup correctly, point your browser to http://localhost:3000, where you should be greeted with an Express page.
+
+node app.js
+Implementing Local Authentication
+In the views directory, create login.html, containing the following code.
+
+<html>
+  <body>
+    <form action="/login" method="post">
+      <div>
+        <label>Username:</label>
+        <input type="text" name="username" />
+        <br/>
+      </div>
+      <div>
+        <label>Password:</label>
+        <input type="password" name="password" />
+      </div>
+      <div>
+        <input type="submit" value="Submit" />
+      </div>
+    </form>
+  </body>
+</html>
+Inside app.js, add the following route:
+
+app.get('/login', function(req, res) {
+  res.sendfile('views/login.html');
+});
+You can view the new login page by restarting the server and visiting /login. Next, let’s implement the login post method to handle authentication. In app.js, add these require() statements:
+
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+We also need to add the Passport middleware for authentication to work. Before the line that reads:
+
+app.use(app.router);
+Add these two lines:
+
+app.use(passport.initialize());
+app.use(passport.session());
+We also need to define the login handler routes, which are shown below.
+
+app.post('/login',
+  passport.authenticate('local', {
+    successRedirect: '/loginSuccess',
+    failureRedirect: '/loginFailure'
+  })
+);
+
+app.get('/loginFailure', function(req, res, next) {
+  res.send('Failed to authenticate');
+});
+
+app.get('/loginSuccess', function(req, res, next) {
+  res.send('Successfully authenticated');
+});
+Passport also needs to serialize and deserialize the user instance, so add the following code.
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+Next, define the local authentication strategy, as shown below. Note that we will add the authentication check logic later.
+
+passport.use(new LocalStrategy(function(username, password, done) {
+  process.nextTick(function() {
+    // Auth Check Logic
+  });
+}));
+Creating a MongoDB Data Store
+Start the mongod server using the following command:
+
+mongod --config /etc/mongodb.conf
+From another terminal launch the Mongo shell:
+
+mongo
+Within the shell, issue the following commands:
+
+use MyDatabase;
+
+db.userInfo.insert({'username':'admin','password':'admin'});
+The first command creates a data store named MyDatabase. The second command creates a collection named userInfo and inserts a record. Let’s insert a few more records:
+
+db.userInfo.insert({'username':'jay','password':'jay'});
+db.userInfo.insert({'username':'roy','password':'password'});
+Retrieving Stored Data
+We can view the data we just added using the following command:
+
+db.userInfo.find();
+The resulting output is shown below:
+
+{ "_id" : ObjectId("5321cd6dbb5b0e6e72d75c80"), "username" : "admin", "password" : "admin" }
+{ "_id" : ObjectId("5321d3f8bb5b0e6e72d75c81"), "username" : "jay", "password" : "jay" }
+{ "_id" : ObjectId("5321d406bb5b0e6e72d75c82"), "username" : "roy", "password" : "password" }
+We can also search for a particular username and password:
+
+db.userInfo.findOne({'username':'admin','password':'admin'})
+This command would return only the admin user.
+
+Connecting to Mongo from Node
+We’ll be using Mongoose to connect to MongoDB from our Node application. From the terminal, type npm install mongoose to install the Mongoose module. Next, add Mongoose to app.js using the following code.
+
+var mongoose = require('mongoose/');
+
+mongoose.connect('mongodb://localhost/MyDatabase');
+We’ll use schemas and models to work with data in Mongo. Schemas define the structure of the data inside a collection, and models are used to create instances of data. So, let’s create one:
+
+var Schema = mongoose.Schema;
+var UserDetail = new Schema({
+      username: String,
+      password: String
+    }, {
+      collection: 'userInfo'
+    });
+var UserDetails = mongoose.model('userInfo', UserDetail);
+It’s time to include our logic to authenticate the user using the UserDetails model. Here is how we do it:
+
+passport.use(new LocalStrategy(function(username, password, done) {
+  process.nextTick(function() {
+    UserDetails.findOne({
+      'username': username, 
+    }, function(err, user) {
+      if (err) {
+        return done(err);
+      }
+
+      if (!user) {
+        return done(null, false);
+      }
+
+      if (user.password != password) {
+        return done(null, false);
+      }
+
+      return done(null, user);
+    });
+  });
+}));
+We simply used the same command that we used in the mongo shell to find a record based on the username. If a record is found and the password matches then the above code returns the user object. Otherwise, it returns false.
+
+Restart your node server and point your browser to http://localhost:3000/login and try to login.
 -------------------
