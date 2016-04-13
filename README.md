@@ -116,4 +116,60 @@ source:
 https://crackstation.net/hashing-security.htm
 
 http://stackoverflow.com/questions/7072478/whats-the-difference-between-bcrypt-and-hashing-multiple-times
+---------------------------------------
 
+5. Explain about JSON Web Tokens (jwt) and why they are very suited for a REST-based API:
+
+JSON Web Token (JWT) is a compact URL-safe means of representing claims to be transferred between two parties.
+ The claims in a JWT are encoded as a JSON object that is digitally signed using JSON Web Signature (JWS).
+ A JWT consists of three main components: a header object, a claims object, and a signature. These three properties
+ are encoded using base64, then concatenated with periods as separators.
+ JSON Web Tokens (JWT) are a more modern approach to authentication. As the web moves to a greater separation between
+ the client and server, JWT provides a wonderful alternative to traditional cookie based authentication models.
+
+ADVANTAGES:
+ - Cross-domain / CORS: cookies + CORS don't play well across different domains. A token-based approach allows you to
+   make AJAX calls to any server, on any domain because you use an HTTP header to transmit the user information.
+ - Stateless: there is no need to keep a session store, the token is a self-contained entity that conveys all the
+   user information.
+ - CDN: you can serve all the assets of your app from a CDN (e.g. javascript, HTML, images, etc.), and your
+   server side is just the API.
+ - Decoupling: you are not tied to a particular authentication scheme. The token might be generated anywhere, hence
+   your API can be called from anywhere with a single way of authenticating those calls.
+ - Mobile ready: when you start working on a native platform (iOS, Android, Windows 8, etc.) cookies are not ideal
+   when consuming a secure API (you have to deal with cookie containers). Adopting a token-based approach
+   simplifies this a lot.
+ - CRSF: since you are not relying on cookies, you don't need to protect against cross site requests.
+
+ Client application                                            API
+ --------------                                             -----------
+        |                                                      |
+        |                   GET /api/employees                 |
+        |----------------------------------------------------->|
+        |                     403 Forbidden                    |
+        |<-----------------------------------------------------|
+        |                                                      |
+        |                                                      |
+        |                 POST /api/authenticate               |
+        |     { login: "john.doe", password: "password" }      |
+        |----------------------------------------------------->|
+        |                      200 Success                     |
+        |             { token: "my.personal.token" }           |
+        |<-----------------------------------------------------|
+        |                                                      |
+        |                                                      |
+        |                 GET /api/employees                   |
+        | Header { "Authorization: Token "my.personal.token" } |
+        |----------------------------------------------------->|
+        |                      200 Success                     |
+        |<-----------------------------------------------------|
+        |                                                      |
+---------------------
+
+6. Explain and demonstrate a system using jwt's, focusing on both client and server side: 
+
+----------------------
+
+7. Explain and demonstrate use of the npm passportjs module:
+
+-------------------
